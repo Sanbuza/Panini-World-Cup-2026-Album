@@ -508,7 +508,48 @@ function renderGrid(){
 function showMoreGrid(){
   gridPage++;
   const show=currentFiltered.slice(0,PAGE*gridPage);
-  document.getElementById('sticker-grid-wrap').innerHTML=`<div class="sticker-grid">${show.map(stickerHTML).join('')}</div>`;
+  const wrap=document.getElementById('sticker-grid-wrap');
+  const fg=document.getElementById('f-group').value;
+  const activeCountry=document.getElementById('f-country').value;
+  const fs=document.getElementById('f-status').value;
+
+  if(!fg&&!activeCountry&&!fs&&show.length>5){
+    const byGroup={};
+    show.forEach(s=>{if(!byGroup[s.group])byGroup[s.group]=[];byGroup[s.group].push(s);});
+    let html='';
+    if(byGroup['ESP']){
+      const espByType={};
+      byGroup['ESP'].forEach(s=>{
+        const k=s.type==='stadium'?'🏟 ESTADIOS SEDE':s.type==='special'?'🌟 COCA-COLA EDITION':'⭐ ESPECIALES';
+        if(!espByType[k])espByType[k]=[];espByType[k].push(s);
+      });
+      Object.entries(espByType).forEach(([label,items])=>{
+        html+=`<div class="group-header">${label}</div><div class="sticker-grid">${items.map(stickerHTML).join('')}</div>`;
+      });
+    }
+    Object.entries(byGroup).forEach(([g,items])=>{
+      if(g==='ESP') return;
+      html+=`<div class="group-header">GRUPO ${g}</div>`;
+      const byCountry={};
+      items.forEach(s=>{if(!byCountry[s.country])byCountry[s.country]=[];byCountry[s.country].push(s);});
+      Object.entries(byCountry).forEach(([country,citems])=>{
+        html+=`<div class="country-header">${getFlagEmoji(citems[0].code.slice(0,3))} ${country}</div>`;
+        html+=`<div class="sticker-grid">${citems.map(stickerHTML).join('')}</div>`;
+      });
+    });
+    wrap.innerHTML=html||'<div class="empty">Sin resultados</div>';
+  } else if(fg&&!activeCountry&&!fs){
+    const byCountry={};
+    show.forEach(s=>{if(!byCountry[s.country])byCountry[s.country]=[];byCountry[s.country].push(s);});
+    let html='';
+    Object.entries(byCountry).forEach(([country,items])=>{
+      html+=`<div class="country-header">${getFlagEmoji(items[0].code.slice(0,3))} ${country}</div>`;
+      html+=`<div class="sticker-grid">${items.map(stickerHTML).join('')}</div>`;
+    });
+    wrap.innerHTML=html||'<div class="empty">Sin resultados</div>';
+  } else {
+    wrap.innerHTML=`<div class="sticker-grid">${show.map(stickerHTML).join('')}</div>`;
+  }
   document.getElementById('grid-more').style.display=currentFiltered.length>show.length?'block':'none';
 }
 
